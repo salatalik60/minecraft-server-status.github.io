@@ -27,6 +27,16 @@
       text-align: center;
       padding: 60px 20px;
       transition: 0.4s ease;
+      position: relative;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+      background-size: 30px 30px;
+      z-index: -1;
     }
 
     .fade-in {
@@ -36,6 +46,18 @@
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-20px); }
       to { opacity: 1; transform: translateY(0); }
+    }
+
+    .shake {
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-8px); }
+      100% { transform: translateX(0); }
     }
 
     .credit {
@@ -103,7 +125,7 @@
       margin-top: 30px;
       padding: 20px;
       background: var(--box);
-      border-radius: 15px;
+      border-radius: 30px;
       min-width: 320px;
       box-shadow: 0 0 20px var(--accent);
       display: none;
@@ -112,6 +134,24 @@
     .status-box p {
       margin: 10px 0;
       font-size: 18px;
+    }
+
+    #loading {
+      margin-top: 20px;
+      font-size: 16px;
+      color: var(--accent);
+      display: none;
+    }
+
+    @media (max-width: 500px) {
+      .input-box {
+        width: 90%;
+      }
+
+      .status-box {
+        width: 90%;
+        font-size: 16px;
+      }
     }
   </style>
 </head>
@@ -124,7 +164,7 @@
       <option value="en">English</option>
       <option value="de">Deutsch</option>
     </select>
-    <button onclick="toggleTheme()">🌗</button>
+    <button onclick="toggleTheme()" id="themeBtn">🌙</button>
   </div>
 
   <h1 id="title" class="fade-in">Sunucu Durumu</h1>
@@ -132,6 +172,8 @@
   <input class="input-box fade-in" type="text" id="ip" placeholder="Sunucu IP'sini gir"/>
   <br />
   <button class="fade-in" onclick="checkStatus()"><span id="checkbtn">Durumu Kontrol Et</span></button>
+
+  <p id="loading">⏳ Kontrol ediliyor...</p>
 
   <div class="status-box fade-in" id="statusBox">
     <p id="result"></p>
@@ -150,7 +192,8 @@
         players: "Oyuncu Sayısı",
         version: "Sunucu Sürümü",
         notfound: "❌ Böyle bir sunucu bulunamadı.",
-        credit: "salatalik60 tarafından"
+        credit: "salatalik60 tarafından",
+        loading: "⏳ Kontrol ediliyor..."
       },
       en: {
         title: "Server Status",
@@ -161,7 +204,8 @@
         players: "Players Online",
         version: "Server Version",
         notfound: "❌ Server not found.",
-        credit: "by salatalik60"
+        credit: "by salatalik60",
+        loading: "⏳ Checking status..."
       },
       de: {
         title: "Serverstatus",
@@ -172,7 +216,8 @@
         players: "Spieler Online",
         version: "Server Version",
         notfound: "❌ Server nicht gefunden.",
-        credit: "von salatalik60"
+        credit: "von salatalik60",
+        loading: "⏳ Überprüfen..."
       }
     };
 
@@ -183,6 +228,7 @@
       document.getElementById("ip").placeholder = l.placeholder;
       document.getElementById("checkbtn").innerText = l.checkbtn;
       document.getElementById("credit").innerText = l.credit;
+      document.getElementById("loading").innerText = l.loading;
     }
 
     document.getElementById("lang").addEventListener("change", updateLang);
@@ -190,22 +236,38 @@
 
     function toggleTheme() {
       const body = document.body;
-      body.dataset.theme = body.dataset.theme === "dark" ? "light" : "dark";
+      const btn = document.getElementById("themeBtn");
+      if (body.dataset.theme === "dark") {
+        body.dataset.theme = "light";
+        btn.textContent = "☀️";
+      } else {
+        body.dataset.theme = "dark";
+        btn.textContent = "🌙";
+      }
     }
 
     function checkStatus() {
       const ip = document.getElementById("ip").value;
       const lang = document.getElementById("lang").value;
       const l = langData[lang];
+      const box = document.getElementById("statusBox");
+      const loading = document.getElementById("loading");
+
+      box.style.display = "none";
+      loading.style.display = "block";
+
       fetch(`https://api.mcsrvstat.us/2/${ip}`)
         .then(res => res.json())
         .then(data => {
-          const box = document.getElementById("statusBox");
+          loading.style.display = "none";
           box.style.display = "block";
+          box.classList.remove("shake"); void box.offsetWidth;
+
           if (!data || !data.hostname) {
             document.getElementById("result").innerText = l.notfound;
             document.getElementById("players").innerText = "";
             document.getElementById("version").innerText = "";
+            box.classList.add("shake");
           } else if (data.online) {
             document.getElementById("result").innerText = l.online;
             document.getElementById("players").innerText = `${l.players}: ${data.players.online}/${data.players.max}`;
@@ -217,10 +279,13 @@
           }
         })
         .catch(() => {
-          document.getElementById("statusBox").style.display = "block";
+          loading.style.display = "none";
+          box.style.display = "block";
           document.getElementById("result").innerText = l.notfound;
           document.getElementById("players").innerText = "";
           document.getElementById("version").innerText = "";
+          box.classList.remove("shake"); void box.offsetWidth;
+          box.classList.add("shake");
         });
     }
   </script>
