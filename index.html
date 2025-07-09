@@ -12,12 +12,14 @@
       --accent: #00ff88;
       --box: #1c1c1c;
     }
+
     [data-theme="light"] {
       --bg: #f0f0f0;
       --text: #000000;
       --accent: #007744;
       --box: #ffffff;
     }
+
     body {
       background: var(--bg);
       color: var(--text);
@@ -25,56 +27,13 @@
       text-align: center;
       padding: 60px 20px;
       transition: 0.4s ease;
-      position: relative;
     }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-      background-size: 30px 30px;
-      z-index: -1;
-    }
-    .fade-in {
-      animation: fadeIn 1s ease forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .shake {
-      animation: shake 0.4s ease;
-    }
-    @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-8px); }
-      50% { transform: translateX(8px); }
-      75% { transform: translateX(-8px); }
-      100% { transform: translateX(0); }
-    }
-    .credit {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 14px;
-      opacity: 0.6;
-    }
-    .top-buttons {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-    }
-    .top-buttons select, .top-buttons button {
-      margin-left: 10px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-    }
+
     h1 {
       font-size: 2.5rem;
       margin-bottom: 30px;
     }
+
     .input-box {
       background: var(--box);
       border: 2px solid #444;
@@ -87,10 +46,12 @@
       transition: 0.3s ease;
       box-shadow: 0 0 10px var(--accent);
     }
+
     .input-box:focus {
       border: 2px solid var(--accent);
       box-shadow: 0 0 15px var(--accent);
     }
+
     button {
       margin-top: 20px;
       padding: 10px 25px;
@@ -102,32 +63,73 @@
       cursor: pointer;
       transition: 0.3s;
     }
+
     button:hover {
       background: #00cc6f;
     }
+
     .status-box {
       margin-top: 30px;
-      padding: 20px;
+      padding: 25px;
       background: var(--box);
-      border-radius: 30px;
+      border-radius: 20px;
       min-width: 320px;
       box-shadow: 0 0 20px var(--accent);
       display: none;
     }
-    .status-box p {
+
+    .status-box img {
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+
+    .status-box .line {
       margin: 10px 0;
       font-size: 18px;
+      font-weight: bold;
     }
-    #loading {
-      margin-top: 20px;
-      font-size: 16px;
-      color: var(--accent);
-      display: none;
+
+    .credit {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 14px;
+      opacity: 0.6;
     }
+
+    .top-buttons {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+
+    .top-buttons select, .top-buttons button {
+      margin-left: 10px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .shake {
+      animation: shake 0.4s ease;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      50% { transform: translateX(8px); }
+      75% { transform: translateX(-8px); }
+      100% { transform: translateX(0); }
+    }
+
     @media (max-width: 500px) {
       .input-box {
         width: 90%;
       }
+
       .status-box {
         width: 90%;
         font-size: 16px;
@@ -147,18 +149,18 @@
     <button onclick="toggleTheme()" id="themeBtn">🌙</button>
   </div>
 
-  <h1 id="title" class="fade-in">Sunucu Durumu</h1>
+  <h1 id="title">Sunucu Durumu</h1>
 
-  <input class="input-box fade-in" type="text" id="ip" placeholder="Sunucu IP'sini gir"/>
+  <input class="input-box" type="text" id="ip" placeholder="Sunucu IP'sini gir"/>
   <br />
-  <button class="fade-in" onclick="checkStatus()"><span id="checkbtn">Durumu Kontrol Et</span></button>
+  <button onclick="checkStatus()"><span id="checkbtn">Durumu Kontrol Et</span></button>
 
-  <p id="loading">⏳ Kontrol ediliyor...</p>
-
-  <div class="status-box fade-in" id="statusBox">
-    <p id="result"></p>
-    <p id="players"></p>
-    <p id="version"></p>
+  <div class="status-box" id="statusBox">
+    <div id="iconBox"></div>
+    <div class="line" id="result"></div>
+    <div class="line" id="motd"></div>
+    <div class="line" id="players"></div>
+    <div class="line" id="version"></div>
   </div>
 
   <script>
@@ -171,9 +173,9 @@
         offline: "❌ Sunucu Kapalı",
         players: "Oyuncu Sayısı",
         version: "Sunucu Sürümü",
+        motd: "Sunucu MOTD",
         notfound: "❌ Böyle bir sunucu bulunamadı.",
-        credit: "salatalik60 tarafından",
-        loading: "⏳ Kontrol ediliyor..."
+        credit: "salatalik60 tarafından"
       },
       en: {
         title: "Server Status",
@@ -183,9 +185,9 @@
         offline: "❌ Server is Offline",
         players: "Players Online",
         version: "Server Version",
+        motd: "Server MOTD",
         notfound: "❌ Server not found.",
-        credit: "by salatalik60",
-        loading: "⏳ Checking status..."
+        credit: "by salatalik60"
       },
       de: {
         title: "Serverstatus",
@@ -195,9 +197,9 @@
         offline: "❌ Server ist Offline",
         players: "Spieler Online",
         version: "Server Version",
+        motd: "Server MOTD",
         notfound: "❌ Server nicht gefunden.",
-        credit: "von salatalik60",
-        loading: "⏳ Überprüfen..."
+        credit: "von salatalik60"
       }
     };
 
@@ -208,7 +210,6 @@
       document.getElementById("ip").placeholder = l.placeholder;
       document.getElementById("checkbtn").innerText = l.checkbtn;
       document.getElementById("credit").innerText = l.credit;
-      document.getElementById("loading").innerText = l.loading;
     }
 
     document.getElementById("lang").addEventListener("change", updateLang);
@@ -231,57 +232,46 @@
       const lang = document.getElementById("lang").value;
       const l = langData[lang];
       const box = document.getElementById("statusBox");
-      const loading = document.getElementById("loading");
 
       box.style.display = "none";
-      loading.style.display = "block";
+      document.getElementById("iconBox").innerHTML = "";
       document.getElementById("result").innerText = "";
       document.getElementById("players").innerText = "";
       document.getElementById("version").innerText = "";
-
-      const startTime = Date.now();
+      document.getElementById("motd").innerText = "";
 
       fetch(`https://api.mcsrvstat.us/2/${ip}`)
         .then(res => res.json())
         .then(data => {
-          const delay = Math.max(1000 - (Date.now() - startTime), 0);
-          setTimeout(() => {
-            loading.style.display = "none";
-            box.style.display = "block";
-            box.classList.remove("shake"); void box.offsetWidth;
+          box.style.display = "block";
+          box.classList.remove("shake"); void box.offsetWidth;
 
-            if (!data || !data.hostname || data.ip === "127.0.0.1") {
-              document.getElementById("result").innerText = l.notfound;
-              box.classList.add("shake");
-              return;
-            }
+          if (!data || !data.hostname || data.ip === "127.0.0.1") {
+            document.getElementById("result").innerText = l.notfound;
+            box.classList.add("shake");
+            return;
+          }
 
-            const icon = data.icon
-              ? `<img src="${data.icon}" style="width:64px;height:64px;border-radius:12px;margin-bottom:10px;">`
-              : "";
+          const icon = data.icon
+            ? `<img src="${data.icon}" alt="Sunucu Icon">`
+            : "";
 
-            if (data.online) {
-              document.getElementById("result").innerHTML = `${icon}<br>${l.online}`;
-              document.getElementById("players").innerText = `${l.players}: ${data.players.online}/${data.players.max}`;
-              document.getElementById("version").innerText = `${l.version}: ${data.version}`;
-            } else {
-              document.getElementById("result").innerHTML = `${icon}<br>${l.offline}`;
-              document.getElementById("players").innerText = "";
-              document.getElementById("version").innerText = "";
-            }
-          }, delay);
+          document.getElementById("iconBox").innerHTML = icon;
+
+          if (data.online) {
+            document.getElementById("result").innerText = l.online;
+            document.getElementById("players").innerText = `${l.players}: ${data.players.online}/${data.players.max}`;
+            document.getElementById("version").innerText = `${l.version}: ${data.version}`;
+            document.getElementById("motd").innerText = `${l.motd}: ${data.motd?.clean?.join(" ") || "-"}`;
+          } else {
+            document.getElementById("result").innerText = l.offline;
+          }
         })
         .catch(() => {
-          const delay = Math.max(1000 - (Date.now() - startTime), 0);
-          setTimeout(() => {
-            loading.style.display = "none";
-            box.style.display = "block";
-            document.getElementById("result").innerText = l.notfound;
-            document.getElementById("players").innerText = "";
-            document.getElementById("version").innerText = "";
-            box.classList.remove("shake"); void box.offsetWidth;
-            box.classList.add("shake");
-          }, delay);
+          box.style.display = "block";
+          document.getElementById("result").innerText = l.notfound;
+          box.classList.remove("shake"); void box.offsetWidth;
+          box.classList.add("shake");
         });
     }
   </script>
