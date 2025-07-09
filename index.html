@@ -135,6 +135,7 @@
     .status-box p {
       margin: 10px 0;
       font-size: 18px;
+      white-space: pre-line;
     }
 
     #loading {
@@ -203,6 +204,7 @@
     <img id="flag" alt="Ülke Bayrağı" src="" style="display:none"/>
     <div id="iconBox"></div>
     <p id="result"></p>
+    <p id="motd"></p>
     <p id="players"></p>
     <p id="version"></p>
   </div>
@@ -279,12 +281,14 @@
     }
 
     // IP-to-country API endpoint
-    // freegeoip.app is a good free option (rate limits apply)
-    async function getCountryCode(ip) {
+    async function getCountryCode(hostname) {
       try {
-        const response = await fetch(`https://freegeoip.app/json/${ip}`);
-        if (!response.ok) return null;
-        const data = await response.json();
+        // Domain kısmını al (örneğin: play.example.com -> example.com)
+        let domain = hostname.split('.').slice(-2).join('.');
+        // freegeoip.app kullanıyoruz
+        const res = await fetch(`https://freegeoip.app/json/${hostname}`);
+        if (!res.ok) return null;
+        const data = await res.json();
         return data.country_code || null;
       } catch {
         return null;
@@ -293,40 +297,29 @@
 
     async function checkStatus() {
       const ip = document.getElementById("ip").value.trim();
+      if (!ip) return alert("Lütfen sunucu IP veya adresi girin.");
+
       const lang = document.getElementById("lang").value;
       const l = langData[lang];
       const box = document.getElementById("statusBox");
-      const flagImg = document.getElementById("flag");
-      const iconBox = document.getElementById("iconBox");
+      const loading = document.getElementById("loading");
       const result = document.getElementById("result");
       const players = document.getElementById("players");
       const version = document.getElementById("version");
-      const loading = document.getElementById("loading");
-
-      if (!ip) {
-        alert(l.placeholder);
-        return;
-      }
+      const motd = document.getElementById("motd");
+      const iconBox = document.getElementById("iconBox");
+      const flagImg = document.getElementById("flag");
 
       box.style.display = "none";
-      flagImg.style.display = "none";
-      flagImg.src = "";
-      iconBox.innerHTML = "";
-      result.innerText = "";
-      players.innerText = "";
-      version.innerText = "";
-
       loading.style.display = "block";
 
-      let loadingTimeout = setTimeout(() => {
-        loading.style.display = "none";
-      }, 2500); // 2.5 saniye beklet
+      // 2.5 saniye bekletelim loading'i
+      await new Promise(r => setTimeout(r, 2500));
 
       try {
         const res = await fetch(`https://api.mcsrvstat.us/2/${ip}`);
         const data = await res.json();
 
-        clearTimeout(loadingTimeout);
         loading.style.display = "none";
         box.style.display = "block";
         box.classList.remove("shake"); void box.offsetWidth;
@@ -335,21 +328,23 @@
           result.innerText = l.notfound;
           players.innerText = "";
           version.innerText = "";
+          motd.innerText = "";
           flagImg.style.display = "none";
+          iconBox.innerHTML = "";
           box.classList.add("shake");
           return;
         }
 
         if (data.online) {
-          // Server icon (base64) varsa göster
+          // Sunucu ikonu (base64) varsa göster
           if (data.icon) {
             iconBox.innerHTML = `<img src="${data.icon}" alt="Sunucu İkonu" />`;
           } else {
             iconBox.innerHTML = "";
           }
 
-          // Ülke kodunu alıp bayrak göster
-          const countryCode = await getCountryCode(ip);
+          // Ülke kodunu hostname'den alalım, sonra bayrağı gösterelim
+          const countryCode = await getCountryCode(data.hostname);
           if (countryCode) {
             flagImg.src = getFlagUrl(countryCode);
             flagImg.style.display = "block";
@@ -357,23 +352,28 @@
             flagImg.style.display = "none";
           }
 
+          // Motd'yi temizleyip (format kodlarını sil) gösterelim
+          let motdClean = data.motd?.clean?.join('\n') || "";
+          
           result.innerText = l.online;
+          motd.innerText = motdClean;
           players.innerText = `${l.players}: ${data.players.online}/${data.players.max}`;
           version.innerText = `${l.version}: ${data.version}`;
         } else {
           result.innerText = l.offline;
           players.innerText = "";
           version.innerText = "";
+          motd.innerText = "";
           flagImg.style.display = "none";
           iconBox.innerHTML = "";
         }
       } catch {
-        clearTimeout(loadingTimeout);
         loading.style.display = "none";
         box.style.display = "block";
         result.innerText = l.notfound;
         players.innerText = "";
         version.innerText = "";
+        motd.innerText = "";
         flagImg.style.display = "none";
         iconBox.innerHTML = "";
         box.classList.remove("shake"); void box.offsetWidth;
