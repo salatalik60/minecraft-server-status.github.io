@@ -146,8 +146,36 @@
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
     </style>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <style>
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .health-ring {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        .tech-badge {
+            @apply px-2 py-1 bg-white/5 rounded text-[10px] font-mono opacity-60;
+        }
+        .motd-html {
+            font-family: 'Minecraft', 'Courier New', Courier, monospace;
+            line-height: 1.5;
+        }
+        .motd-html span {
+            display: inline-block;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+        }
+    </style>
 </head>
 <body class="p-4 md:p-8">
+    <div id="particles-js"></div>
     <div id="dynamicBg" class="dynamic-bg"></div>
 
     <!-- UI Controls -->
@@ -160,6 +188,7 @@
         </button>
         <select id="langSelect" onchange="changeLang(this.value)" class="glass-card px-4 py-2 outline-none cursor-pointer font-bold text-sm">
             <option value="tr">TR</option>
+                    <option value="de">DE</option>
             <option value="en">EN</option>
             <option value="de">DE</option>
         </select>
@@ -201,6 +230,20 @@
                             <img id="serverIcon" src="" class="w-32 h-32 rounded-3xl shadow-2xl border-2 border-white/10 bg-black/40">
                             <div id="onlinePulse" class="absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-[#080a0c] bg-emerald-500 animate-pulse"></div>
                         </div>
+
+                        <!-- Health Metric -->
+                        <div class="relative w-24 h-24 mb-4 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90">
+                                <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent" class="text-white/5" />
+                                <circle id="healthCircle" cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="transparent"
+                                    stroke-dasharray="251.2" stroke-dashoffset="251.2" class="text-emerald-500 health-ring shadow-lg" />
+                            </svg>
+                            <div class="absolute flex flex-col items-center">
+                                <span id="healthPercent" class="text-xl font-black">100%</span>
+                                <span class="text-[8px] font-bold opacity-40 uppercase" id="labelHealth">SAĞLIK</span>
+                            </div>
+                        </div>
+
                         <h2 id="serverHostname" class="text-2xl font-bold mb-2 truncate w-full">Hypixel Network</h2>
                         <div id="serverStatus" class="status-online font-bold text-sm uppercase tracking-widest mb-4">Sunucu Aktif</div>
 
@@ -215,16 +258,46 @@
                         <div id="motd" class="p-4 bg-black/30 rounded-2xl font-mono text-sm leading-relaxed min-h-[80px] flex items-center justify-center text-center"></div>
 
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors group">
                                 <p class="text-[10px] font-bold opacity-40 uppercase mb-1" id="labelVersion">Sürüm</p>
                                 <p id="versionText" class="font-bold text-lg">1.8 - 1.20</p>
                                 <div id="versionAlert" class="hidden mt-1 text-[10px] text-amber-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> <span id="alertText">Eski Sürüm</span></div>
                             </div>
-                            <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div class="p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors group">
                                 <p class="text-[10px] font-bold opacity-40 uppercase mb-1" id="labelPlayers">Oyuncular</p>
                                 <p id="playersText" class="font-bold text-lg">24,501 / 100,000</p>
                             </div>
                         </div>
+
+                        <!-- Technical Data -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <div class="flex items-center gap-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                                <i class="fa-solid fa-network-wired text-primary opacity-50 text-xs"></i>
+                                <div class="flex flex-col">
+                                    <span class="text-[8px] font-bold opacity-40 uppercase">IP</span>
+                                    <span id="resolvedIp" class="text-[10px] font-mono">127.0.0.1</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                                <i class="fa-solid fa-door-open text-primary opacity-50 text-xs"></i>
+                                <div class="flex flex-col">
+                                    <span class="text-[8px] font-bold opacity-40 uppercase">PORT</span>
+                                    <span id="serverPort" class="text-[10px] font-mono">25565</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                                <i class="fa-solid fa-code-branch text-primary opacity-50 text-xs"></i>
+                                <div class="flex flex-col">
+                                    <span class="text-[8px] font-bold opacity-40 uppercase">PROTOCOL</span>
+                                    <span id="protocolText" class="text-[10px] font-mono">763</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="copyJoinCommand()" class="w-full py-3 bg-primary/20 hover:bg-primary/30 border border-primary/30 rounded-2xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-terminal text-[10px]"></i>
+                            <span id="btnJoinCmd">Katılma Komutunu Kopyala</span>
+                        </button>
 
                         <!-- Ping Chart -->
                         <div class="p-4 bg-white/5 rounded-2xl border border-white/5 h-40">
@@ -339,7 +412,36 @@
                 recent: "Son Aramalar",
                 clear: "Temizle",
                 hosting: "Hosting",
-                placeholder: "Sunucu IP'sini girin..."
+                placeholder: "Sunucu IP'sini girin...",
+                health: "SAĞLIK",
+                joinCmd: "Komutu Kopyala",
+                joinCopied: "Komut Kopyalandı!"
+            },
+            de: {
+                title: "Server Tracker",
+                subtitle: "Fortgeschrittene Minecraft-Überwachung",
+                checkBtn: "Analysieren",
+                loading: "Wird geladen...",
+                online: "Server Online",
+                offline: "Server Offline",
+                copy: "IP Kopieren",
+                copied: "Kopiert!",
+                ver: "Version",
+                outdated: "Veraltet",
+                players: "Spieler",
+                onlinePlayers: "Online Spieler",
+                plugins: "Plugins",
+                errorTitle: "Verbindungsfehler",
+                errorMsg: "Server nicht erreichbar oder IP falsch.",
+                auto: "Auto-Refresh (30s)",
+                favs: "Favoriten",
+                recent: "Verlauf",
+                clear: "Löschen",
+                hosting: "Hosting",
+                placeholder: "Server IP eingeben...",
+                health: "GESUNDHEIT",
+                joinCmd: "Befehl Kopieren",
+                joinCopied: "Kopiert!"
             },
             en: {
                 title: "Server Tracker",
@@ -362,7 +464,7 @@
                 recent: "Recent Searches",
                 clear: "Clear",
                 hosting: "Hosting",
-                placeholder: "Enter server IP..."
+                placeholder: "Enter server IP...", health: "HEALTH", joinCmd: "Copy Join CMD", joinCopied: "CMD Copied!"
             },
             de: {
                 title: "Server Tracker",
@@ -446,11 +548,20 @@
             document.getElementById('onlinePulse').className = "absolute -bottom-2 -right-2 w-8 h-8 rounded-full border-4 border-[#080a0c] bg-emerald-500 animate-pulse";
 
             // MOTD
-            document.getElementById('motd').innerHTML = data.motd?.clean?.join('<br>') || "MOTD Bilgisi Yok";
+            document.getElementById('motd').innerHTML = `<div class='motd-html'>${data.motd?.html?.join('') || data.motd?.clean?.join('<br>') || 'MOTD Bilgisi Yok'}</div>`;
 
             // Stats
             document.getElementById('versionText').innerText = data.version || '???';
             document.getElementById('playersText').innerText = `${data.players.online.toLocaleString()} / ${data.players.max.toLocaleString()}`;
+
+            // Technical Data
+            document.getElementById('resolvedIp').innerText = data.ip || '???';
+            document.getElementById('serverPort').innerText = data.port || '25565';
+            document.getElementById('protocolText').innerText = data.protocol?.version || '???';
+
+            // Health Calculation
+            const health = calculateHealth(rtt, data.players);
+            updateHealthUI(health);
 
             // Version check
             const latest = await getLatestVersion();
@@ -484,7 +595,13 @@
                 grid.innerHTML = players.list.map(p => {
                     const name = typeof p === 'string' ? p : p.name;
                     const uuid = typeof p === 'object' ? p.uuid : name;
-                    return `<img src="https://mc-heads.net/avatar/${uuid}/64" class="player-head" title="${name}" alt="${name}">`;
+                    return `
+                        <div class="group relative">
+                            <img src="https://mc-heads.net/avatar/${uuid}/64" class="player-head w-10 h-10 rounded-lg border-2 border-white/10 hover:border-primary transition-all shadow-lg" alt="${name}">
+                            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                                ${name}
+                            </div>
+                        </div>`;
                 }).join('');
             } else {
                 section.classList.add('hidden');
@@ -602,6 +719,8 @@
             document.getElementById('labelRecent').innerText = t.recent;
             document.getElementById('btnClear').innerText = t.clear;
             document.getElementById('serverIp').placeholder = t.placeholder;
+            document.getElementById('labelHealth').innerText = t.health;
+            document.getElementById('btnJoinCmd').innerText = t.joinCmd;
 
             renderHistory();
             renderFavorites();
@@ -740,7 +859,70 @@
             }
         });
 
+
+        function calculateHealth(rtt, players) {
+            let score = 100;
+            // RTT penalty
+            if (rtt > 150) score -= 10;
+            if (rtt > 300) score -= 20;
+            if (rtt > 500) score -= 40;
+
+            // Player load penalty
+            if (players.max > 0) {
+                const ratio = players.online / players.max;
+                if (ratio > 0.9) score -= 15;
+                else if (ratio > 0.7) score -= 5;
+            }
+            return Math.max(0, score);
+        }
+
+        function updateHealthUI(percent) {
+            const circle = document.getElementById('healthCircle');
+            const label = document.getElementById('healthPercent');
+            const radius = 40;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (percent / 100 * circumference);
+
+            circle.style.strokeDashoffset = offset;
+            label.innerText = percent + "%";
+
+            if (percent > 80) circle.style.color = "#10b981";
+            else if (percent > 50) circle.style.color = "#f59e0b";
+            else circle.style.color = "#ef4444";
+        }
+
+        function copyJoinCommand() {
+            const ip = document.getElementById('serverIp').value;
+            const cmd = currentType === 'java' ? `/connect ${ip}` : `/join ${ip}`;
+            navigator.clipboard.writeText(cmd);
+            const btn = document.getElementById('btnJoinCmd');
+            const original = btn.innerText;
+            btn.innerText = langData[currentLang].joinCopied;
+            setTimeout(() => btn.innerText = original, 2000);
+        }
+
+        function initParticles() {
+            particlesJS("particles-js", {
+                "particles": {
+                    "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                    "color": { "value": "#ffffff" },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.1, "random": false },
+                    "size": { "value": 3, "random": true },
+                    "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.05, "width": 1 },
+                    "move": { "enable": true, "speed": 1, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": false } },
+                    "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 0.5 } } }
+                },
+                "retina_detect": true
+            });
+        }
+
         window.onload = () => {
+            initParticles();
             const savedTheme = localStorage.getItem('mc_theme');
             if (savedTheme === 'light') toggleTheme();
 
