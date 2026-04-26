@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     :root {
       --bg: #0f0f0f;
@@ -17,6 +19,7 @@
       --glass: rgba(255, 255, 255, 0.08);
       --border: rgba(255, 255, 255, 0.12);
       --error: #ff4757;
+      --glow: rgba(0, 255, 136, 0.1);
     }
 
     [data-theme="light"] {
@@ -27,13 +30,14 @@
       --glass: rgba(0, 0, 0, 0.04);
       --border: rgba(0, 0, 0, 0.08);
       --error: #ef4444;
+      --glow: rgba(16, 185, 129, 0.1);
     }
 
     body {
       background: var(--bg);
       background-image:
-        radial-gradient(at 0% 0%, rgba(0, 255, 136, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(0, 255, 136, 0.1) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, var(--glow) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, var(--glow) 0px, transparent 50%);
       color: var(--text);
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       text-align: center;
@@ -46,7 +50,15 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+    }
+
+    .dynamic-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      filter: blur(100px);
+      opacity: 0.15;
+      transition: background 1s ease;
     }
 
     .credit {
@@ -79,30 +91,19 @@
       font-weight: 600;
       font-size: 14px;
       transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-
-    .top-buttons select:hover, .top-buttons button:hover {
-      background: var(--border);
-      transform: translateY(-2px);
     }
 
     .container {
-      max-width: 500px;
+      max-width: 650px;
       width: 100%;
       backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
       background-color: var(--box);
       border-radius: 32px;
       border: 1px solid var(--border);
-      padding: 48px;
+      padding: 40px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      margin-top: 40px;
+      margin-bottom: 40px;
     }
 
     h1 {
@@ -110,9 +111,6 @@
       margin-bottom: 8px;
       font-weight: 800;
       letter-spacing: -0.025em;
-      background: linear-gradient(135deg, var(--text) 30%, var(--accent));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
     }
 
     .subtitle {
@@ -131,6 +129,7 @@
     .input-row {
       display: flex;
       gap: 12px;
+      position: relative;
     }
 
     .input-box {
@@ -143,13 +142,25 @@
       color: var(--text);
       outline: none;
       transition: 0.3s;
-      font-family: inherit;
     }
 
-    .input-box:focus {
-      border-color: var(--accent);
-      background: var(--border);
-      box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
+    .favorite-btn {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: var(--text);
+      opacity: 0.3;
+      transition: 0.3s;
+    }
+
+    .favorite-btn.active {
+      opacity: 1;
+      color: #ffb800;
     }
 
     .toggle-group {
@@ -171,15 +182,12 @@
       cursor: pointer;
       font-size: 13px;
       font-weight: 700;
-      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      transition: 0.3s;
     }
 
     .toggle-btn.active {
       background: var(--accent);
       color: #000;
-      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
     }
 
     .primary-btn {
@@ -191,23 +199,8 @@
       background: var(--accent);
       color: #000;
       cursor: pointer;
-      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: 0.3s;
       width: 100%;
-      margin-top: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .primary-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 24px rgba(0, 255, 136, 0.25);
-      filter: brightness(1.1);
-    }
-
-    .primary-btn:active {
-      transform: translateY(0);
     }
 
     .status-box {
@@ -218,8 +211,6 @@
       border: 1px solid var(--border);
       display: none;
       text-align: center;
-      position: relative;
-      overflow: hidden;
     }
 
     .status-box.show {
@@ -228,40 +219,124 @@
     }
 
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .status-box p {
-      margin: 12px 0;
-      font-size: 16px;
-      line-height: 1.6;
+    .info-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: var(--glass);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin: 4px;
+      border: 1px solid var(--border);
     }
 
-    #result {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 16px;
+    .player-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 16px;
     }
 
-    #motd {
-      font-family: 'Inter', monospace;
-      font-size: 14px;
-      background: rgba(0,0,0,0.2);
-      padding: 12px;
-      border-radius: 12px;
-      white-space: pre-wrap;
-      word-break: break-all;
+    .player-head {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      cursor: help;
+    }
+
+    .chart-container {
+      margin-top: 20px;
+      height: 150px;
+      width: 100%;
+    }
+
+    .hosting-info {
+      margin-top: 16px;
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .plugin-list {
+      margin-top: 15px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+    }
+
+    .plugin-item {
+      font-size: 11px;
+      padding: 2px 6px;
+      background: var(--glass);
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      background: var(--bg);
+      padding: 30px;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      text-align: center;
+      max-width: 90%;
+    }
+
+    #qrcode {
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      margin: 20px auto;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .clear-btn {
+      font-size: 11px;
+      color: var(--error);
+      cursor: pointer;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .version-warning {
+      color: #ffb800;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
     }
 
     #loading {
-      margin-top: 24px;
-      font-weight: 600;
-      color: var(--accent);
       display: none;
+      margin-top: 20px;
       align-items: center;
       justify-content: center;
       gap: 10px;
+      color: var(--accent);
     }
 
     .spinner {
@@ -273,172 +348,28 @@
       animation: spin 0.8s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    #iconBox img {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 16px;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    }
-
-    #flag {
-      width: 32px;
-      height: 20px;
-      border-radius: 4px;
-      object-fit: cover;
-      margin: 0 auto 12px;
-      display: block;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .history-section {
-      margin-top: 32px;
-      text-align: left;
-    }
-
-    .history-title {
-      font-size: 14px;
-      font-weight: 700;
-      opacity: 0.5;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .history-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .history-item {
-      background: var(--glass);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .history-item:hover {
-      background: var(--border);
-      border-color: var(--accent);
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 20px;
-      justify-content: center;
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .action-btn {
-      padding: 8px 16px;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--glass);
-      color: var(--text);
-      transition: 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: var(--glass);
+        color: var(--text);
+        transition: 0.2s;
     }
-
-    .action-btn:hover {
-      background: var(--border);
-    }
-
-    .auto-refresh {
-      margin-top: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      font-size: 13px;
-      opacity: 0.8;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 34px;
-      height: 20px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: var(--glass);
-      transition: .4s;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 14px;
-      width: 14px;
-      left: 2px;
-      bottom: 2px;
-      background-color: var(--text);
-      transition: .4s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: var(--accent);
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(14px);
-      background-color: #000;
-    }
-
-    .shake {
-      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-    }
-
-    @keyframes shake {
-      10%, 90% { transform: translate3d(-1px, 0, 0); }
-      20%, 80% { transform: translate3d(2px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-      40%, 60% { transform: translate3d(4px, 0, 0); }
-    }
-
-    @media (max-width: 500px) {
-      .container {
-        padding: 32px 24px;
-        border-radius: 24px;
-      }
-      h1 { font-size: 2rem; }
-      .top-buttons { top: 10px; right: 10px; }
-      .credit { display: none; }
-    }
+    .action-btn.qr-btn { background: #6c5ce7; color: white; border: none; }
   </style>
 </head>
 <body data-theme="dark">
+  <div class="dynamic-bg" id="dynamicBg"></div>
   <div class="credit" id="credit">salatalik60 tarafından</div>
 
   <div class="top-buttons">
+    <button onclick="toggleNotifications()" id="notifBtn">🔔</button>
     <select id="lang">
       <option value="tr">TR</option>
       <option value="en">EN</option>
@@ -449,7 +380,7 @@
 
   <div class="container">
     <h1 id="title">Sunucu Durumu</h1>
-    <p class="subtitle" id="subtitle">Gerçek zamanlı Minecraft sunucu takibi</p>
+    <p class="subtitle" id="subtitle">Gelişmiş Minecraft sunucu takibi</p>
 
     <div class="input-group">
       <div class="toggle-group">
@@ -459,6 +390,7 @@
 
       <div class="input-row">
         <input class="input-box" type="text" id="ip" placeholder="Sunucu IP'sini gir"/>
+        <button class="favorite-btn" id="favBtn" onclick="toggleFavorite()">★</button>
       </div>
 
       <button class="primary-btn" onclick="checkStatus()">
@@ -472,45 +404,82 @@
     </div>
 
     <div class="status-box" id="statusBox">
+      <div id="hostingBadge" class="hosting-info"></div>
       <img id="flag" alt="Ülke Bayrağı" src="" style="display:none"/>
       <div id="iconBox"></div>
       <p id="result"></p>
       <p id="motd"></p>
-      <p id="players"></p>
-      <p id="version"></p>
 
-      <div class="action-buttons">
+      <div id="versionArea">
+        <p id="version"></p>
+        <div id="versionWarning" class="version-warning"></div>
+      </div>
+
+      <p id="players"></p>
+
+      <div id="playerList" class="player-grid" style="display:none"></div>
+      <div id="pluginList" class="plugin-list" style="display:none"></div>
+
+      <div class="chart-container">
+        <canvas id="pingChart"></canvas>
+      </div>
+
+      <div class="action-buttons" style="margin-top: 20px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
         <button class="action-btn" onclick="copyIP()">
           <span id="copyBtnText">IP Kopyala</span>
         </button>
         <button class="action-btn" onclick="shareServer()">
           <span id="shareBtnText">Paylaş</span>
         </button>
+        <button class="action-btn qr-btn" onclick="showQR()">
+          <span>QR Kod</span>
+        </button>
       </div>
     </div>
 
-    <div class="auto-refresh">
+    <div class="auto-refresh" style="margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 8px;">
       <span id="autoRefreshText">Otomatik Yenile (30s)</span>
-      <label class="switch">
-        <input type="checkbox" id="autoRefresh">
-        <span class="slider"></span>
+      <label class="switch" style="position: relative; display: inline-block; width: 34px; height: 20px;">
+        <input type="checkbox" id="autoRefresh" style="opacity: 0; width: 0; height: 0;">
+        <span class="slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--glass); transition: .4s; border-radius: 20px; border: 1px solid var(--border);"></span>
       </label>
     </div>
 
-    <div class="history-section" id="historySection" style="display:none">
-      <div class="history-title" id="historyTitle">Son Aramalar</div>
-      <div class="history-list" id="historyList"></div>
+    <div class="history-section" id="favSection" style="display:none; margin-top: 32px; text-align: left;">
+      <div class="history-title" style="font-size: 14px; font-weight: 700; opacity: 0.5; margin-bottom: 12px; text-transform: uppercase;">Favoriler</div>
+      <div class="history-list" id="favList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+    </div>
+
+    <div class="history-section" id="historySection" style="display:none; margin-top: 32px; text-align: left;">
+      <div class="history-header">
+        <div class="history-title" id="historyTitle" style="font-size: 14px; font-weight: 700; opacity: 0.5; text-transform: uppercase;">Son Aramalar</div>
+        <div class="clear-btn" onclick="clearHistory()">Temizle</div>
+      </div>
+      <div class="history-list" id="historyList" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+    </div>
+  </div>
+
+  <div id="qrModal" class="modal" onclick="closeQR()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <h3>Sunucu QR Kodu</h3>
+      <div id="qrcode"></div>
+      <button class="primary-btn" onclick="closeQR()">Kapat</button>
     </div>
   </div>
 
   <script>
     let serverType = 'java';
     let refreshInterval = null;
+    let pingChart = null;
+    let pingData = [];
+    let currentIP = "";
+    let wasOnline = null;
+    let notificationsEnabled = false;
 
     const langData = {
       tr: {
         title: "Sunucu Durumu",
-        subtitle: "Gerçek zamanlı Minecraft sunucu takibi",
+        subtitle: "Gelişmiş Minecraft sunucu takibi",
         placeholder: "Sunucu IP'sini gir",
         checkbtn: "Durumu Kontrol Et",
         online: "✅ Sunucu Aktif",
@@ -524,13 +493,16 @@
         copied: "Kopyalandı!",
         share: "Paylaş",
         history: "Son Aramalar",
+        favorites: "Favoriler",
         autoRefresh: "Otomatik Yenile (30s)",
-        typeJava: "Java",
-        typeBedrock: "Bedrock"
+        clear: "Temizle",
+        verOutdated: "⚠️ Sunucu sürümü güncel değil!",
+        notifEnabled: "Bildirimler açıldı",
+        notifDisabled: "Bildirimler kapalı"
       },
       en: {
         title: "Server Status",
-        subtitle: "Real-time Minecraft server tracking",
+        subtitle: "Advanced Minecraft server tracking",
         placeholder: "Enter server IP",
         checkbtn: "Check Status",
         online: "✅ Server is Online",
@@ -544,13 +516,16 @@
         copied: "Copied!",
         share: "Share",
         history: "Recent Searches",
+        favorites: "Favorites",
         autoRefresh: "Auto Refresh (30s)",
-        typeJava: "Java",
-        typeBedrock: "Bedrock"
+        clear: "Clear",
+        verOutdated: "⚠️ Server version is outdated!",
+        notifEnabled: "Notifications enabled",
+        notifDisabled: "Notifications disabled"
       },
       de: {
         title: "Serverstatus",
-        subtitle: "Echtzeit Minecraft-Serverüberwachung",
+        subtitle: "Erweitertes Minecraft-Server-Tracking",
         placeholder: "Server-IP eingeben",
         checkbtn: "Status prüfen",
         online: "✅ Server ist Online",
@@ -564,9 +539,12 @@
         copied: "Kopiert!",
         share: "Teilen",
         history: "Letzte Suchen",
+        favorites: "Favoriten",
         autoRefresh: "Auto-Aktualisierung (30s)",
-        typeJava: "Java",
-        typeBedrock: "Bedrock"
+        clear: "Löschen",
+        verOutdated: "⚠️ Serverversion veraltet!",
+        notifEnabled: "Benachrichtigungen aktiviert",
+        notifDisabled: "Benachrichtigungen deaktiviert"
       }
     };
 
@@ -583,13 +561,7 @@
       document.getElementById("shareBtnText").innerText = l.share;
       document.getElementById("historyTitle").innerText = l.history;
       document.getElementById("autoRefreshText").innerText = l.autoRefresh;
-      document.getElementById("javaBtn").innerText = l.typeJava;
-      document.getElementById("bedrockBtn").innerText = l.typeBedrock;
-
-      // Update results if visible
-      if (document.getElementById("statusBox").style.display === "block") {
-         // Optionally refresh status or just update static labels
-      }
+      document.querySelectorAll(".clear-btn").forEach(el => el.innerText = l.clear);
     }
 
     document.getElementById("lang").addEventListener("change", updateLang);
@@ -610,29 +582,70 @@
       serverType = type;
       document.getElementById("javaBtn").classList.toggle("active", type === 'java');
       document.getElementById("bedrockBtn").classList.toggle("active", type === 'bedrock');
+      checkFavoriteState();
     }
 
-    function getFlagUrl(countryCode) {
-      if (!countryCode) return "";
-      return `https://flagcdn.com/w80/${countryCode.toLowerCase()}.png`;
-    }
+    // --- FAVORITES & HISTORY ---
 
-    async function getCountryCode(hostname) {
-      try {
-        const res = await fetch(`https://freegeoip.app/json/${hostname}`);
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data.country_code || null;
-      } catch {
-        return null;
+    function toggleFavorite() {
+      const ip = document.getElementById("ip").value.trim();
+      if (!ip) return;
+
+      let favorites = JSON.parse(localStorage.getItem('mc_favorites') || '[]');
+      const index = favorites.findIndex(f => f.ip === ip && f.type === serverType);
+
+      if (index === -1) {
+        favorites.push({ ip, type: serverType });
+        document.getElementById("favBtn").classList.add("active");
+      } else {
+        favorites.splice(index, 1);
+        document.getElementById("favBtn").classList.remove("active");
       }
+
+      localStorage.setItem('mc_favorites', JSON.stringify(favorites));
+      renderFavorites();
+    }
+
+    function checkFavoriteState() {
+      const ip = document.getElementById("ip").value.trim();
+      const favorites = JSON.parse(localStorage.getItem('mc_favorites') || '[]');
+      const isFav = favorites.some(f => f.ip === ip && f.type === serverType);
+      document.getElementById("favBtn").classList.toggle("active", isFav);
+    }
+
+    document.getElementById("ip").addEventListener("input", checkFavoriteState);
+
+    function renderFavorites() {
+      const favorites = JSON.parse(localStorage.getItem('mc_favorites') || '[]');
+      const container = document.getElementById("favSection");
+      const list = document.getElementById("favList");
+
+      if (favorites.length === 0) {
+        container.style.display = "none";
+        return;
+      }
+
+      container.style.display = "block";
+      list.innerHTML = "";
+      favorites.forEach(item => {
+        const btn = document.createElement("div");
+        btn.className = "history-item";
+        btn.style.cssText = "background: var(--glass); border: 1px solid var(--border); padding: 6px 12px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: 0.2s;";
+        btn.innerHTML = `⭐ ${item.ip} <span style="opacity:0.5; font-size:10px;">(${item.type})</span>`;
+        btn.onclick = () => {
+          document.getElementById("ip").value = item.ip;
+          setType(item.type);
+          checkStatus();
+        };
+        list.appendChild(btn);
+      });
     }
 
     function saveToHistory(ip, type) {
       let history = JSON.parse(localStorage.getItem('mc_history') || '[]');
-      history = history.filter(item => item.ip !== ip);
+      history = history.filter(item => item.ip !== ip || item.type !== type);
       history.unshift({ ip, type });
-      history = history.slice(0, 5);
+      history = history.slice(0, 10);
       localStorage.setItem('mc_history', JSON.stringify(history));
       renderHistory();
     }
@@ -652,6 +665,7 @@
       history.forEach(item => {
         const btn = document.createElement("div");
         btn.className = "history-item";
+        btn.style.cssText = "background: var(--glass); border: 1px solid var(--border); padding: 6px 12px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: 0.2s;";
         btn.innerText = `${item.ip} (${item.type})`;
         btn.onclick = () => {
           document.getElementById("ip").value = item.ip;
@@ -660,6 +674,201 @@
         };
         list.appendChild(btn);
       });
+    }
+
+    function clearHistory() {
+      localStorage.removeItem('mc_history');
+      renderHistory();
+    }
+
+    // --- RENDERING & UTILS ---
+
+    async function updateHostingInfo(ip) {
+      const badge = document.getElementById("hostingBadge");
+      try {
+        const res = await fetch(`https://ipapi.co/${ip}/json/`);
+        const data = await res.json();
+        if (data.org) {
+          badge.innerHTML = `📍 ${data.city || ''}, ${data.country_name || ''} | ☁️ ${data.org}`;
+        }
+      } catch { badge.innerHTML = ""; }
+    }
+
+    function toggleNotifications() {
+      if (!notificationsEnabled) {
+        Notification.requestPermission().then(permission => {
+          if (permission === "granted") {
+            notificationsEnabled = true;
+            document.getElementById("notifBtn").innerText = "🔔✅";
+            alert(langData[document.getElementById("lang").value].notifEnabled);
+          }
+        });
+      } else {
+        notificationsEnabled = false;
+        document.getElementById("notifBtn").innerText = "🔔";
+      }
+    }
+
+    function sendNotification(title, body) {
+      if (notificationsEnabled && Notification.permission === "granted") {
+        new Notification(title, { body, icon: "https://static.thenounproject.com/png/2101005-200.png" });
+      }
+    }
+
+    function updateDynamicBg(iconBase64) {
+      if (!iconBase64) {
+        document.getElementById("dynamicBg").style.background = "transparent";
+        return;
+      }
+      document.getElementById("dynamicBg").style.background = `url(${iconBase64}) center/cover no-repeat`;
+    }
+
+    function updatePingChart(newPing) {
+      const ctx = document.getElementById('pingChart').getContext('2d');
+      pingData.push(newPing);
+      if (pingData.length > 20) pingData.shift();
+
+      if (pingChart) {
+        pingChart.update();
+      } else {
+        pingChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: pingData.map((_, i) => i),
+            datasets: [{
+              label: 'Ping (ms)',
+              data: pingData,
+              borderColor: '#00ff88',
+              backgroundColor: 'rgba(0, 255, 136, 0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { display: false },
+              y: {
+                beginAtZero: true,
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function showQR() {
+      const ip = document.getElementById("ip").value.trim();
+      if (!ip) return;
+      const qrContainer = document.getElementById("qrcode");
+      qrContainer.innerHTML = "";
+      new QRCode(qrContainer, {
+        text: ip,
+        width: 128,
+        height: 128,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+      });
+      document.getElementById("qrModal").style.display = "flex";
+    }
+
+    function closeQR() {
+      document.getElementById("qrModal").style.display = "none";
+    }
+
+    async function getLatestVersion() {
+      try {
+        const res = await fetch('https://launchermeta.mojang.com/mc/game/version_manifest.json');
+        const data = await res.json();
+        return data.latest.release;
+      } catch { return null; }
+    }
+
+    function renderPlayers(players) {
+      const container = document.getElementById("playerList");
+      if (!players || !players.list || players.list.length === 0) {
+        container.style.display = "none";
+        return;
+      }
+      container.style.display = "grid";
+      container.innerHTML = players.list.map(p => {
+        const name = typeof p === 'string' ? p : p.name;
+        const uuid = typeof p === 'object' ? p.uuid : name;
+        return `<img class="player-head" src="https://mc-heads.net/avatar/${uuid}/32" title="${name}" alt="${name}">`;
+      }).join('');
+    }
+
+    async function checkStatus() {
+      const ip = document.getElementById("ip").value.trim();
+      if (!ip) return;
+      currentIP = ip;
+      const lang = document.getElementById("lang").value;
+      const l = langData[lang];
+      const box = document.getElementById("statusBox");
+      const loading = document.getElementById("loading");
+      loading.style.display = "flex";
+      box.classList.remove("show");
+
+      try {
+        const endpoint = serverType === 'java' ? '2' : 'bedrock/2';
+        const start = Date.now();
+        const res = await fetch(`https://api.mcsrvstat.us/${endpoint}/${ip}`);
+        const data = await res.json();
+        const rtt = Date.now() - start;
+        loading.style.display = "none";
+        box.style.display = "block";
+        setTimeout(() => box.classList.add("show"), 10);
+
+        if (data.online) {
+          wasOnline = true;
+          saveToHistory(ip, serverType);
+          updateDynamicBg(data.icon);
+          document.getElementById("result").innerText = l.online;
+          document.getElementById("result").style.color = "var(--accent)";
+          document.getElementById("motd").innerText = data.motd?.clean?.join('\n') || "";
+          document.getElementById("players").innerText = `${l.players}: ${data.players.online} / ${data.players.max}`;
+          document.getElementById("version").innerText = `${l.version}: ${data.version}`;
+          const latest = await getLatestVersion();
+          const warn = document.getElementById("versionWarning");
+          if (latest && data.version && !data.version.includes(latest) && serverType === 'java') {
+            warn.innerText = l.verOutdated + ` (Latest: ${latest})`;
+            warn.style.display = "block";
+          } else {
+            warn.style.display = "none";
+          }
+          renderPlayers(data.players);
+          updatePingChart(rtt);
+          updateHostingInfo(ip);
+          if (data.icon) {
+            document.getElementById("iconBox").innerHTML = `<img src="${data.icon}" style="width:80px; border-radius:16px; margin-bottom:16px;">`;
+          }
+          if (data.plugins) {
+            const plist = document.getElementById("pluginList");
+            plist.style.display = "flex";
+            plist.innerHTML = data.plugins.names.map(n => `<span class="plugin-item">${n}</span>`).join('');
+          }
+        } else {
+          wasOnline = false;
+          document.getElementById("result").innerText = l.offline;
+          document.getElementById("result").style.color = "var(--error)";
+          ["motd", "players", "version", "playerList", "pluginList"].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.innerText = "";
+                if (id.includes('List')) el.style.display = "none";
+            }
+          });
+        }
+      } catch (e) {
+        loading.style.display = "none";
+        document.getElementById("result").innerText = l.notfound;
+      }
     }
 
     async function copyIP() {
@@ -675,17 +884,11 @@
 
     function shareServer() {
       const ip = document.getElementById("ip").value;
-      const type = serverType;
       const url = new URL(window.location.href);
       url.searchParams.set('ip', ip);
-      url.searchParams.set('type', type);
-
+      url.searchParams.set('type', serverType);
       if (navigator.share) {
-        navigator.share({
-          title: 'Minecraft Server Status',
-          text: `Check out this Minecraft server: ${ip}`,
-          url: url.toString(),
-        });
+        navigator.share({ title: 'Minecraft Server Status', text: `Check out this Minecraft server: ${ip}`, url: url.toString() });
       } else {
         navigator.clipboard.writeText(url.toString());
         alert(langData[document.getElementById("lang").value].copied);
@@ -694,99 +897,25 @@
 
     document.getElementById("autoRefresh").addEventListener("change", (e) => {
       if (e.target.checked) {
-        refreshInterval = setInterval(checkStatus, 30000);
+        refreshInterval = setInterval(async () => {
+          const oldStatus = wasOnline;
+          await checkStatus();
+          if (oldStatus === false && wasOnline === true) {
+            sendNotification("Sunucu Aktif!", `${currentIP} tekrar çevrimiçi!`);
+          }
+        }, 30000);
       } else {
         clearInterval(refreshInterval);
       }
     });
 
-    async function checkStatus() {
-      const ip = document.getElementById("ip").value.trim();
-      if (!ip) return;
-
-      const lang = document.getElementById("lang").value;
-      const l = langData[lang];
-      const box = document.getElementById("statusBox");
-      const loading = document.getElementById("loading");
-      const result = document.getElementById("result");
-      const players = document.getElementById("players");
-      const version = document.getElementById("version");
-      const motd = document.getElementById("motd");
-      const iconBox = document.getElementById("iconBox");
-      const flagImg = document.getElementById("flag");
-
-      loading.style.display = "flex";
-      box.classList.remove("show");
-
-      try {
-        const endpoint = serverType === 'java' ? '2' : 'bedrock/2';
-        const res = await fetch(`https://api.mcsrvstat.us/${endpoint}/${ip}`);
-        const data = await res.json();
-
-        loading.style.display = "none";
-        box.style.display = "block";
-        setTimeout(() => box.classList.add("show"), 10);
-        box.classList.remove("shake");
-
-        if (data.online) {
-          saveToHistory(ip, serverType);
-
-          if (data.icon) {
-            iconBox.innerHTML = `<img src="${data.icon}" alt="Icon" />`;
-          } else {
-            iconBox.innerHTML = "";
-          }
-
-          const countryCode = await getCountryCode(data.hostname || ip);
-          if (countryCode) {
-            flagImg.src = getFlagUrl(countryCode);
-            flagImg.style.display = "block";
-          } else {
-            flagImg.style.display = "none";
-          }
-
-          let motdClean = data.motd?.clean?.join('\n') || "";
-
-          result.innerText = l.online;
-          result.style.color = "var(--accent)";
-          motd.innerText = motdClean;
-          motd.style.display = motdClean ? "block" : "none";
-          players.innerText = `${l.players}: ${data.players.online} / ${data.players.max}`;
-          version.innerText = `${l.version}: ${data.version}`;
-        } else {
-          result.innerText = l.offline;
-          result.style.color = "var(--error)";
-          players.innerText = "";
-          version.innerText = "";
-          motd.innerText = "";
-          motd.style.display = "none";
-          flagImg.style.display = "none";
-          iconBox.innerHTML = "";
-        }
-      } catch {
-        loading.style.display = "none";
-        box.style.display = "block";
-        box.classList.add("show");
-        result.innerText = l.notfound;
-        result.style.color = "var(--error)";
-        players.innerText = "";
-        version.innerText = "";
-        motd.innerText = "";
-        motd.style.display = "none";
-        flagImg.style.display = "none";
-        iconBox.innerHTML = "";
-        box.classList.add("shake");
-      }
-    }
-
     window.onload = () => {
       updateLang();
       renderHistory();
-
+      renderFavorites();
       const params = new URLSearchParams(window.location.search);
       const ip = params.get('ip');
       const type = params.get('type');
-
       if (ip) {
         document.getElementById("ip").value = ip;
         if (type) setType(type);
