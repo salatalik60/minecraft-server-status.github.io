@@ -5,178 +5,433 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Minecraft Sunucu Durumu</title>
   <link rel="icon" href="https://static.thenounproject.com/png/2101005-200.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0f0f0f;
       --text: #ffffff;
       --accent: #00ff88;
-      --box: #1c1c1c;
+      --box: rgba(255, 255, 255, 0.03);
+      --glass: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.12);
+      --error: #ff4757;
     }
 
     [data-theme="light"] {
-      --bg: #f0f0f0;
-      --text: #000000;
-      --accent: #007744;
-      --box: #ffffff;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --accent: #10b981;
+      --box: rgba(0, 0, 0, 0.02);
+      --glass: rgba(0, 0, 0, 0.04);
+      --border: rgba(0, 0, 0, 0.08);
+      --error: #ef4444;
     }
 
     body {
       background: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(0, 255, 136, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(0, 255, 136, 0.1) 0px, transparent 50%);
       color: var(--text);
-      font-family: 'Segoe UI', sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       text-align: center;
-      padding: 60px 20px;
-      transition: 0.4s ease;
+      padding: 40px 20px;
+      margin: 0;
+      min-height: 100vh;
+      transition: background 0.4s ease, color 0.4s ease;
       position: relative;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-      background-size: 30px 30px;
-      z-index: -1;
-    }
-
-    .fade-in {
-      animation: fadeIn 1s ease forwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .shake {
-      animation: shake 0.4s ease;
-    }
-
-    @keyframes shake {
-      0% { transform: translateX(0); }
-      25% { transform: translateX(-8px); }
-      50% { transform: translateX(8px); }
-      75% { transform: translateX(-8px); }
-      100% { transform: translateX(0); }
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
     }
 
     .credit {
-      position: absolute;
-      top: 10px;
-      left: 10px;
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
       font-size: 14px;
       opacity: 0.6;
+      font-weight: 500;
     }
 
     .top-buttons {
-      position: absolute;
-      top: 10px;
-      right: 10px;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 12px;
+      z-index: 100;
     }
 
     .top-buttons select, .top-buttons button {
-      margin-left: 10px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      border: none;
+      padding: 10px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color: var(--text);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .top-buttons select:hover, .top-buttons button:hover {
+      background: var(--border);
+      transform: translateY(-2px);
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background-color: var(--box);
+      border-radius: 32px;
+      border: 1px solid var(--border);
+      padding: 48px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     h1 {
       font-size: 2.5rem;
-      margin-bottom: 30px;
+      margin-bottom: 8px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, var(--text) 30%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      opacity: 0.6;
+      margin-bottom: 32px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
     }
 
     .input-box {
-      background: var(--box);
-      border: 2px solid #444;
-      border-radius: 20px;
-      padding: 15px 25px;
-      width: 300px;
-      font-size: 18px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      flex: 1;
+      font-size: 16px;
       color: var(--text);
       outline: none;
-      transition: 0.3s ease;
-      box-shadow: 0 0 10px var(--accent);
+      transition: 0.3s;
+      font-family: inherit;
     }
 
     .input-box:focus {
-      border: 2px solid var(--accent);
-      box-shadow: 0 0 15px var(--accent);
+      border-color: var(--accent);
+      background: var(--border);
+      box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.1);
     }
 
-    button {
-      margin-top: 20px;
-      padding: 10px 25px;
-      font-size: 16px;
-      border: none;
+    .toggle-group {
+      display: flex;
+      background: var(--glass);
+      border-radius: 14px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      width: fit-content;
+      margin: 0 auto;
+    }
+
+    .toggle-btn {
+      padding: 8px 18px;
       border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .toggle-btn.active {
+      background: var(--accent);
+      color: #000;
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+    }
+
+    .primary-btn {
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 18px;
       background: var(--accent);
       color: #000;
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100%;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
 
-    button:hover {
-      background: #00cc6f;
+    .primary-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(0, 255, 136, 0.25);
+      filter: brightness(1.1);
+    }
+
+    .primary-btn:active {
+      transform: translateY(0);
     }
 
     .status-box {
-      margin-top: 30px;
-      padding: 20px;
-      background: var(--box);
-      border-radius: 30px;
-      min-width: 320px;
-      box-shadow: 0 0 20px var(--accent);
+      margin-top: 32px;
+      padding: 24px;
+      background: var(--glass);
+      border-radius: 24px;
+      border: 1px solid var(--border);
       display: none;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status-box.show {
+      display: block;
+      animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .status-box p {
-      margin: 10px 0;
-      font-size: 18px;
-      white-space: pre-line;
+      margin: 12px 0;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    #result {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    #motd {
+      font-family: 'Inter', monospace;
+      font-size: 14px;
+      background: rgba(0,0,0,0.2);
+      padding: 12px;
+      border-radius: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
     }
 
     #loading {
-      margin-top: 20px;
-      font-size: 16px;
+      margin-top: 24px;
+      font-weight: 600;
       color: var(--accent);
       display: none;
-      transition: opacity 0.3s ease;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0, 255, 136, 0.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     #iconBox img {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 10px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px var(--accent);
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
+      width: 80px;
+      height: 80px;
+      margin-bottom: 16px;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     }
+
     #flag {
-      width: 40px;
-      height: 28px;
-      margin-bottom: 10px;
-      border-radius: 6px;
-      box-shadow: 0 0 8px var(--accent);
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
+      width: 32px;
+      height: 20px;
+      border-radius: 4px;
       object-fit: cover;
+      margin: 0 auto 12px;
+      display: block;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .history-section {
+      margin-top: 32px;
+      text-align: left;
+    }
+
+    .history-title {
+      font-size: 14px;
+      font-weight: 700;
+      opacity: 0.5;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .history-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .history-item {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .history-item:hover {
+      background: var(--border);
+      border-color: var(--accent);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .action-btn {
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color: var(--text);
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .action-btn:hover {
+      background: var(--border);
+    }
+
+    .auto-refresh {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--glass);
+      transition: .4s;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 2px;
+      bottom: 2px;
+      background-color: var(--text);
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(14px);
+      background-color: #000;
+    }
+
+    .shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
     }
 
     @media (max-width: 500px) {
-      .input-box {
-        width: 90%;
+      .container {
+        padding: 32px 24px;
+        border-radius: 24px;
       }
-
-      .status-box {
-        width: 90%;
-        font-size: 16px;
-      }
+      h1 { font-size: 2rem; }
+      .top-buttons { top: 10px; right: 10px; }
+      .credit { display: none; }
     }
   </style>
 </head>
@@ -185,67 +440,133 @@
 
   <div class="top-buttons">
     <select id="lang">
-      <option value="tr">Türkçe</option>
-      <option value="en">English</option>
-      <option value="de">Deutsch</option>
+      <option value="tr">TR</option>
+      <option value="en">EN</option>
+      <option value="de">DE</option>
     </select>
     <button onclick="toggleTheme()" id="themeBtn">🌙</button>
   </div>
 
-  <h1 id="title" class="fade-in">Sunucu Durumu</h1>
+  <div class="container">
+    <h1 id="title">Sunucu Durumu</h1>
+    <p class="subtitle" id="subtitle">Gerçek zamanlı Minecraft sunucu takibi</p>
 
-  <input class="input-box fade-in" type="text" id="ip" placeholder="Sunucu IP'sini gir"/>
-  <br />
-  <button class="fade-in" onclick="checkStatus()"><span id="checkbtn">Durumu Kontrol Et</span></button>
+    <div class="input-group">
+      <div class="toggle-group">
+        <button class="toggle-btn active" id="javaBtn" onclick="setType('java')">Java</button>
+        <button class="toggle-btn" id="bedrockBtn" onclick="setType('bedrock')">Bedrock</button>
+      </div>
 
-  <p id="loading">⏳ Kontrol ediliyor...</p>
+      <div class="input-row">
+        <input class="input-box" type="text" id="ip" placeholder="Sunucu IP'sini gir"/>
+      </div>
 
-  <div class="status-box fade-in" id="statusBox">
-    <img id="flag" alt="Ülke Bayrağı" src="" style="display:none"/>
-    <div id="iconBox"></div>
-    <p id="result"></p>
-    <p id="motd"></p>
-    <p id="players"></p>
-    <p id="version"></p>
+      <button class="primary-btn" onclick="checkStatus()">
+        <span id="checkbtn">Durumu Kontrol Et</span>
+      </button>
+    </div>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <span id="loadingText">Kontrol ediliyor...</span>
+    </div>
+
+    <div class="status-box" id="statusBox">
+      <img id="flag" alt="Ülke Bayrağı" src="" style="display:none"/>
+      <div id="iconBox"></div>
+      <p id="result"></p>
+      <p id="motd"></p>
+      <p id="players"></p>
+      <p id="version"></p>
+
+      <div class="action-buttons">
+        <button class="action-btn" onclick="copyIP()">
+          <span id="copyBtnText">IP Kopyala</span>
+        </button>
+        <button class="action-btn" onclick="shareServer()">
+          <span id="shareBtnText">Paylaş</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="auto-refresh">
+      <span id="autoRefreshText">Otomatik Yenile (30s)</span>
+      <label class="switch">
+        <input type="checkbox" id="autoRefresh">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="history-section" id="historySection" style="display:none">
+      <div class="history-title" id="historyTitle">Son Aramalar</div>
+      <div class="history-list" id="historyList"></div>
+    </div>
   </div>
 
   <script>
+    let serverType = 'java';
+    let refreshInterval = null;
+
     const langData = {
       tr: {
         title: "Sunucu Durumu",
+        subtitle: "Gerçek zamanlı Minecraft sunucu takibi",
         placeholder: "Sunucu IP'sini gir",
         checkbtn: "Durumu Kontrol Et",
         online: "✅ Sunucu Aktif",
         offline: "❌ Sunucu Kapalı",
         players: "Oyuncu Sayısı",
-        version: "Sunucu Sürümü",
-        notfound: "❌ Böyle bir sunucu bulunamadı.",
+        version: "Sürüm",
+        notfound: "❌ Sunucu bulunamadı.",
         credit: "salatalik60 tarafından",
-        loading: "⏳ Kontrol ediliyor..."
+        loading: "Kontrol ediliyor...",
+        copyIp: "IP Kopyala",
+        copied: "Kopyalandı!",
+        share: "Paylaş",
+        history: "Son Aramalar",
+        autoRefresh: "Otomatik Yenile (30s)",
+        typeJava: "Java",
+        typeBedrock: "Bedrock"
       },
       en: {
         title: "Server Status",
-        placeholder: "Enter Server IP",
+        subtitle: "Real-time Minecraft server tracking",
+        placeholder: "Enter server IP",
         checkbtn: "Check Status",
         online: "✅ Server is Online",
         offline: "❌ Server is Offline",
-        players: "Players Online",
-        version: "Server Version",
+        players: "Players",
+        version: "Version",
         notfound: "❌ Server not found.",
         credit: "by salatalik60",
-        loading: "⏳ Checking status..."
+        loading: "Checking...",
+        copyIp: "Copy IP",
+        copied: "Copied!",
+        share: "Share",
+        history: "Recent Searches",
+        autoRefresh: "Auto Refresh (30s)",
+        typeJava: "Java",
+        typeBedrock: "Bedrock"
       },
       de: {
         title: "Serverstatus",
+        subtitle: "Echtzeit Minecraft-Serverüberwachung",
         placeholder: "Server-IP eingeben",
         checkbtn: "Status prüfen",
         online: "✅ Server ist Online",
         offline: "❌ Server ist Offline",
-        players: "Spieler Online",
-        version: "Server Version",
+        players: "Spieler",
+        version: "Version",
         notfound: "❌ Server nicht gefunden.",
         credit: "von salatalik60",
-        loading: "⏳ Überprüfen..."
+        loading: "Überprüfen...",
+        copyIp: "IP Kopieren",
+        copied: "Kopiert!",
+        share: "Teilen",
+        history: "Letzte Suchen",
+        autoRefresh: "Auto-Aktualisierung (30s)",
+        typeJava: "Java",
+        typeBedrock: "Bedrock"
       }
     };
 
@@ -253,14 +574,25 @@
       const lang = document.getElementById("lang").value;
       const l = langData[lang];
       document.getElementById("title").innerText = l.title;
+      document.getElementById("subtitle").innerText = l.subtitle;
       document.getElementById("ip").placeholder = l.placeholder;
       document.getElementById("checkbtn").innerText = l.checkbtn;
       document.getElementById("credit").innerText = l.credit;
-      document.getElementById("loading").innerText = l.loading;
+      document.getElementById("loadingText").innerText = l.loading;
+      document.getElementById("copyBtnText").innerText = l.copyIp;
+      document.getElementById("shareBtnText").innerText = l.share;
+      document.getElementById("historyTitle").innerText = l.history;
+      document.getElementById("autoRefreshText").innerText = l.autoRefresh;
+      document.getElementById("javaBtn").innerText = l.typeJava;
+      document.getElementById("bedrockBtn").innerText = l.typeBedrock;
+
+      // Update results if visible
+      if (document.getElementById("statusBox").style.display === "block") {
+         // Optionally refresh status or just update static labels
+      }
     }
 
     document.getElementById("lang").addEventListener("change", updateLang);
-    updateLang();
 
     function toggleTheme() {
       const body = document.body;
@@ -274,18 +606,19 @@
       }
     }
 
-    // Flag CDN URL (80px width)
+    function setType(type) {
+      serverType = type;
+      document.getElementById("javaBtn").classList.toggle("active", type === 'java');
+      document.getElementById("bedrockBtn").classList.toggle("active", type === 'bedrock');
+    }
+
     function getFlagUrl(countryCode) {
       if (!countryCode) return "";
       return `https://flagcdn.com/w80/${countryCode.toLowerCase()}.png`;
     }
 
-    // IP-to-country API endpoint
     async function getCountryCode(hostname) {
       try {
-        // Domain kısmını al (örneğin: play.example.com -> example.com)
-        let domain = hostname.split('.').slice(-2).join('.');
-        // freegeoip.app kullanıyoruz
         const res = await fetch(`https://freegeoip.app/json/${hostname}`);
         if (!res.ok) return null;
         const data = await res.json();
@@ -295,9 +628,81 @@
       }
     }
 
+    function saveToHistory(ip, type) {
+      let history = JSON.parse(localStorage.getItem('mc_history') || '[]');
+      history = history.filter(item => item.ip !== ip);
+      history.unshift({ ip, type });
+      history = history.slice(0, 5);
+      localStorage.setItem('mc_history', JSON.stringify(history));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const history = JSON.parse(localStorage.getItem('mc_history') || '[]');
+      const container = document.getElementById("historySection");
+      const list = document.getElementById("historyList");
+
+      if (history.length === 0) {
+        container.style.display = "none";
+        return;
+      }
+
+      container.style.display = "block";
+      list.innerHTML = "";
+      history.forEach(item => {
+        const btn = document.createElement("div");
+        btn.className = "history-item";
+        btn.innerText = `${item.ip} (${item.type})`;
+        btn.onclick = () => {
+          document.getElementById("ip").value = item.ip;
+          setType(item.type);
+          checkStatus();
+        };
+        list.appendChild(btn);
+      });
+    }
+
+    async function copyIP() {
+      const ip = document.getElementById("ip").value;
+      const lang = document.getElementById("lang").value;
+      const btnText = document.getElementById("copyBtnText");
+      try {
+        await navigator.clipboard.writeText(ip);
+        btnText.innerText = langData[lang].copied;
+        setTimeout(() => btnText.innerText = langData[lang].copyIp, 2000);
+      } catch (err) {}
+    }
+
+    function shareServer() {
+      const ip = document.getElementById("ip").value;
+      const type = serverType;
+      const url = new URL(window.location.href);
+      url.searchParams.set('ip', ip);
+      url.searchParams.set('type', type);
+
+      if (navigator.share) {
+        navigator.share({
+          title: 'Minecraft Server Status',
+          text: `Check out this Minecraft server: ${ip}`,
+          url: url.toString(),
+        });
+      } else {
+        navigator.clipboard.writeText(url.toString());
+        alert(langData[document.getElementById("lang").value].copied);
+      }
+    }
+
+    document.getElementById("autoRefresh").addEventListener("change", (e) => {
+      if (e.target.checked) {
+        refreshInterval = setInterval(checkStatus, 30000);
+      } else {
+        clearInterval(refreshInterval);
+      }
+    });
+
     async function checkStatus() {
       const ip = document.getElementById("ip").value.trim();
-      if (!ip) return alert("Lütfen sunucu IP veya adresi girin.");
+      if (!ip) return;
 
       const lang = document.getElementById("lang").value;
       const l = langData[lang];
@@ -310,41 +715,29 @@
       const iconBox = document.getElementById("iconBox");
       const flagImg = document.getElementById("flag");
 
-      box.style.display = "none";
-      loading.style.display = "block";
-
-      // 2.5 saniye bekletelim loading'i
-      await new Promise(r => setTimeout(r, 2500));
+      loading.style.display = "flex";
+      box.classList.remove("show");
 
       try {
-        const res = await fetch(`https://api.mcsrvstat.us/2/${ip}`);
+        const endpoint = serverType === 'java' ? '2' : 'bedrock/2';
+        const res = await fetch(`https://api.mcsrvstat.us/${endpoint}/${ip}`);
         const data = await res.json();
 
         loading.style.display = "none";
         box.style.display = "block";
-        box.classList.remove("shake"); void box.offsetWidth;
-
-        if (!data || !data.hostname) {
-          result.innerText = l.notfound;
-          players.innerText = "";
-          version.innerText = "";
-          motd.innerText = "";
-          flagImg.style.display = "none";
-          iconBox.innerHTML = "";
-          box.classList.add("shake");
-          return;
-        }
+        setTimeout(() => box.classList.add("show"), 10);
+        box.classList.remove("shake");
 
         if (data.online) {
-          // Sunucu ikonu (base64) varsa göster
+          saveToHistory(ip, serverType);
+
           if (data.icon) {
-            iconBox.innerHTML = `<img src="${data.icon}" alt="Sunucu İkonu" />`;
+            iconBox.innerHTML = `<img src="${data.icon}" alt="Icon" />`;
           } else {
             iconBox.innerHTML = "";
           }
 
-          // Ülke kodunu hostname'den alalım, sonra bayrağı gösterelim
-          const countryCode = await getCountryCode(data.hostname);
+          const countryCode = await getCountryCode(data.hostname || ip);
           if (countryCode) {
             flagImg.src = getFlagUrl(countryCode);
             flagImg.style.display = "block";
@@ -352,34 +745,54 @@
             flagImg.style.display = "none";
           }
 
-          // Motd'yi temizleyip (format kodlarını sil) gösterelim
           let motdClean = data.motd?.clean?.join('\n') || "";
-          
+
           result.innerText = l.online;
+          result.style.color = "var(--accent)";
           motd.innerText = motdClean;
-          players.innerText = `${l.players}: ${data.players.online}/${data.players.max}`;
+          motd.style.display = motdClean ? "block" : "none";
+          players.innerText = `${l.players}: ${data.players.online} / ${data.players.max}`;
           version.innerText = `${l.version}: ${data.version}`;
         } else {
           result.innerText = l.offline;
+          result.style.color = "var(--error)";
           players.innerText = "";
           version.innerText = "";
           motd.innerText = "";
+          motd.style.display = "none";
           flagImg.style.display = "none";
           iconBox.innerHTML = "";
         }
       } catch {
         loading.style.display = "none";
         box.style.display = "block";
+        box.classList.add("show");
         result.innerText = l.notfound;
+        result.style.color = "var(--error)";
         players.innerText = "";
         version.innerText = "";
         motd.innerText = "";
+        motd.style.display = "none";
         flagImg.style.display = "none";
         iconBox.innerHTML = "";
-        box.classList.remove("shake"); void box.offsetWidth;
         box.classList.add("shake");
       }
     }
+
+    window.onload = () => {
+      updateLang();
+      renderHistory();
+
+      const params = new URLSearchParams(window.location.search);
+      const ip = params.get('ip');
+      const type = params.get('type');
+
+      if (ip) {
+        document.getElementById("ip").value = ip;
+        if (type) setType(type);
+        checkStatus();
+      }
+    };
   </script>
 </body>
 </html>
